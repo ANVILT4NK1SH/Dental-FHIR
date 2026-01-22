@@ -1,0 +1,64 @@
+
+<div #container class="relative w-full">
+  <button type="button" (click)="togglePicker()" class="w-full flex items-center justify-between text-left px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+    <span [class.text-gray-500]="!selectedDateTime()" [class.dark:text-gray-400]="!selectedDateTime()">{{ displayValue() }}</span>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+  </button>
+
+  @if (isOpen()) {
+    <div class="absolute top-full mt-1 w-full md:w-80 bg-white border border-gray-300 rounded-lg shadow-lg z-10 p-2 dark:bg-gray-800 dark:border-gray-600">
+      <div class="flex">
+        <!-- Calendar Part -->
+        <div class="w-2/3 pr-2 border-r dark:border-gray-700">
+          <div class="flex justify-between items-center mb-2">
+            <button type="button" (click)="changeMonth(-1)" class="p-1 rounded-full hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">&lt;</button>
+            <span class="text-sm font-semibold dark:text-gray-200">{{ viewDate() | date:'MMMM yyyy' }}</span>
+            <button type="button" (click)="changeMonth(1)" class="p-1 rounded-full hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">&gt;</button>
+          </div>
+          <div class="grid grid-cols-7 text-center text-xs text-gray-500 dark:text-gray-400">
+            @for (day of weekdays; track day) {
+              <div class="w-8 h-8 flex items-center justify-center">{{ day }}</div>
+            }
+          </div>
+          <div class="grid grid-cols-7">
+            @for (week of calendarGrid(); track week) {
+              @for (day of week; track day.date) {
+                <button type="button" (click)="selectDate(day.date)" class="w-8 h-8 text-sm flex items-center justify-center rounded-full text-gray-800"
+                  [disabled]="day.isDisabled"
+                  [class.text-gray-400]="!day.isCurrentMonth"
+                  [class.dark:text-gray-200]="day.isCurrentMonth"
+                  [class.dark:text-gray-500]="!day.isCurrentMonth"
+                  [class.bg-blue-500]="(selectedDate() | date:'yyyy-MM-dd') === (day.date | date:'yyyy-MM-dd')"
+                  [class.dark:bg-blue-600]="(selectedDate() | date:'yyyy-MM-dd') === (day.date | date:'yyyy-MM-dd')"
+                  [class.text-white]="(selectedDate() | date:'yyyy-MM-dd') === (day.date | date:'yyyy-MM-dd')"
+                  [class.hover:bg-gray-100]="(selectedDate() | date:'yyyy-MM-dd') !== (day.date | date:'yyyy-MM-dd') && !day.isDisabled"
+                  [class.dark:hover:bg-gray-700]="(selectedDate() | date:'yyyy-MM-dd') !== (day.date | date:'yyyy-MM-dd') && !day.isDisabled"
+                  [class.opacity-50]="day.isDisabled"
+                  [class.cursor-not-allowed]="day.isDisabled">
+                  {{ day.date | date:'d' }}
+                </button>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Time Part -->
+        <div class="w-1/3 pl-2">
+          <div class="h-56 overflow-y-auto text-sm">
+            @for (time of timeSlots; track time.value) {
+              <button type="button" (click)="selectTime(time)" class="w-full text-center p-1 rounded text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                [disabled]="isTimeDisabled(time.value)"
+                [class.bg-blue-500]="selectedTime() === time.value"
+                [class.text-white]="selectedTime() === time.value"
+                [class.dark:bg-blue-600]="selectedTime() === time.value"
+                [class.opacity-50]="isTimeDisabled(time.value)"
+                [class.cursor-not-allowed]="isTimeDisabled(time.value)">
+                {{ time.display }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

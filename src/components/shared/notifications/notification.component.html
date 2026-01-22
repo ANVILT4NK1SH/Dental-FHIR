@@ -1,0 +1,15 @@
+
+<div class="fixed top-6 right-6 z-[100] space-y-3 w-full max-w-sm">
+  @for (notification of notifications(); track notification.id) {
+    <div [class]="'notification-item relative p-4 rounded-lg shadow-lg border flex items-start space-x-3 ' + getContainerClass(notification.type)">
+      <div class="flex-shrink-0" [innerHTML]="getIcon(notification.type)"></div>
+      <div class="flex-1">
+        <p class="font-bold">{{ notification.type | titlecase }}</p>
+        <p class="text-sm">{{ notification.message }}</p>
+      </div>
+      <button (click)="close(notification.id)" class="absolute top-2 right-2 p-1 rounded-full hover:bg-black/10">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+  }
+</div>

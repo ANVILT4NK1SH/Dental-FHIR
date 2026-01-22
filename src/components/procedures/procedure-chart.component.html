@@ -1,0 +1,150 @@
+
+<div class="space-y-6">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Left Side: Procedure Form -->
+    <div class="md:col-span-1 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md flex flex-col">
+      <h1 class="text-2xl font-bold text-gray-700 dark:text-gray-200 mb-4">Add Procedure</h1>
+      <form [formGroup]="procedureForm" (ngSubmit)="saveProcedure()" class="space-y-4 flex-grow flex flex-col">
+        <div class="flex-grow space-y-4">
+          <div>
+            <label for="patient" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Patient</label>
+            <select id="patient" formControlName="patientId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+              <option value="" disabled>Select a patient</option>
+              @for(patient of patients(); track patient.id) {
+                <option [value]="patient.id">{{ patient.name[0].text }}</option>
+              }
+            </select>
+          </div>
+          
+          <!-- AI Assistant Section -->
+          <div class="space-y-2 p-3 border rounded-md bg-gray-50 dark:bg-gray-700/50 dark:border-gray-600">
+             <label for="ai-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">AI Code Suggestion</label>
+            <textarea id="ai-description" [(ngModel)]="aiDescription" [ngModelOptions]="{standalone: true}" rows="3" class="w-full shadow-sm sm:text-sm border-gray-300 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Describe observation..."></textarea>
+            <button type="button" (click)="getAiSuggestion()" [disabled]="isAiLoading()" class="w-full text-sm py-2 px-3 text-white bg-indigo-600 hover:bg-indigo-700 rounded-md disabled:bg-indigo-400 flex items-center justify-center">
+              @if(isAiLoading()) {
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span>Analyzing...</span>
+              } @else {
+                <span>Ask AI</span>
+              }
+            </button>
+            @if(aiSuggestion(); as suggestion) {
+              <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">{{suggestion.justification}}</p>
+            }
+            @if(aiError()) {
+              <p class="text-xs text-red-600 dark:text-red-400 mt-1">{{aiError()}}</p>
+            }
+          </div>
+
+          <div>
+            <label for="procedure-code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Procedure Code (ADA CDT)</label>
+            <input type="text" id="procedure-code" formControlName="procedureCode" placeholder="e.g., D2740" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+          </div>
+          <div>
+            <label for="scheduledDateTime" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Procedure Date & Time</label>
+            <app-datetime-picker formControlName="scheduledDateTime"></app-datetime-picker>
+          </div>
+          <div>
+            <label for="tooth" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Selected Tooth</label>
+            <input type="text" id="tooth" formControlName="tooth" readonly class="mt-1 block w-full bg-gray-100 shadow-sm sm:text-sm border-gray-300 rounded-md text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+          </div>
+        </div>
+        <button type="submit" [disabled]="procedureForm.invalid" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-blue-300 mt-auto">
+          Save Procedure
+        </button>
+      </form>
+    </div>
+
+    <!-- Right Side: Tooth Chart -->
+    <div class="md:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">Select Tooth</h2>
+        <div class="flex space-x-2 p-1 bg-gray-200 dark:bg-gray-700 rounded-lg">
+          <button type="button" (click)="setNotation('Universal')" [class.bg-white]="notation() === 'Universal'" [class.dark:bg-gray-800]="notation() === 'Universal'" [class.text-blue-600]="notation() === 'Universal'" class="px-3 py-1 text-sm font-medium rounded-md transition-colors">Universal</button>
+          <button type="button" (click)="setNotation('FDI')" [class.bg-white]="notation() === 'FDI'" [class.dark:bg-gray-800]="notation() === 'FDI'" [class.text-blue-600]="notation() === 'FDI'" class="px-3 py-1 text-sm font-medium rounded-md transition-colors">FDI</button>
+        </div>
+      </div>
+      
+      <div class="text-center">
+        <!-- Upper Arch -->
+        <div class="flex justify-center items-center space-x-1 mb-2">
+          @for(tooth of upperArch.slice(0, 8); track tooth) {
+            <div (click)="selectTooth(tooth)"
+                 [class.bg-blue-600]="selectedTooth() === tooth.toString()"
+                 [class.border-blue-600]="selectedTooth() === tooth.toString()"
+                 [class.text-white]="selectedTooth() === tooth.toString()"
+                 class="w-10 h-10 flex items-center justify-center border rounded-md cursor-pointer text-gray-700 hover:bg-blue-100 transition-colors dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">{{tooth}}</div>
+          }
+          <div class="w-2"></div> <!-- Centerline -->
+          @for(tooth of upperArch.slice(8, 16); track tooth) {
+            <div (click)="selectTooth(tooth)"
+                 [class.bg-blue-600]="selectedTooth() === tooth.toString()"
+                 [class.border-blue-600]="selectedTooth() === tooth.toString()"
+                 [class.text-white]="selectedTooth() === tooth.toString()"
+                 class="w-10 h-10 flex items-center justify-center border rounded-md cursor-pointer text-gray-700 hover:bg-blue-100 transition-colors dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">{{tooth}}</div>
+          }
+        </div>
+
+        <!-- Lower Arch -->
+        <div class="flex justify-center items-center space-x-1">
+          @for(tooth of lowerArch.slice(0, 8); track tooth) {
+            <div (click)="selectTooth(tooth)"
+                 [class.bg-blue-600]="selectedTooth() === tooth.toString()"
+                 [class.border-blue-600]="selectedTooth() === tooth.toString()"
+                 [class.text-white]="selectedTooth() === tooth.toString()"
+                 class="w-10 h-10 flex items-center justify-center border rounded-md cursor-pointer text-gray-700 hover:bg-blue-100 transition-colors dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">{{tooth}}</div>
+          }
+          <div class="w-2"></div> <!-- Centerline -->
+          @for(tooth of lowerArch.slice(8, 16); track tooth) {
+            <div (click)="selectTooth(tooth)"
+                 [class.bg-blue-600]="selectedTooth() === tooth.toString()"
+                 [class.border-blue-600]="selectedTooth() === tooth.toString()"
+                 [class.text-white]="selectedTooth() === tooth.toString()"
+                 class="w-10 h-10 flex items-center justify-center border rounded-md cursor-pointer text-gray-700 hover:bg-blue-100 transition-colors dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">{{tooth}}</div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recorded Procedures List -->
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold text-gray-700 dark:text-gray-200 mb-4">Recorded Procedures</h2>
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white dark:bg-gray-800">
+        <thead class="bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+          <tr>
+            <th class="py-3 px-6 text-left">Patient</th>
+            <th class="py-3 px-6 text-left">Procedure Code</th>
+            <th class="py-3 px-6 text-left">Tooth ({{ notation() }})</th>
+            <th class="py-3 px-6 text-left">Performed Date</th>
+            <th class="py-3 px-6 text-left">Status</th>
+            <th class="py-3 px-6 text-left">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-700 dark:text-gray-300">
+          @for (procedure of procedures(); track procedure.id) {
+            <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <td class="py-3 px-6">{{ procedure.subject.display }}</td>
+              <td class="py-3 px-6">{{ procedure.code.coding[0].code }}</td>
+              <td class="py-3 px-6">{{ procedure.bodySite[0].coding[0].code }}</td>
+              <td class="py-3 px-6">{{ procedure.performedDateTime | date:'medium' }}</td>
+              <td class="py-3 px-6">
+                <span class="px-2 py-1 text-xs font-semibold rounded-full" [class.bg-yellow-100]="procedure.status === 'in-progress'" [class.text-yellow-800]="procedure.status === 'in-progress'" [class.bg-green-100]="procedure.status === 'completed'" [class.text-green-800]="procedure.status === 'completed'">
+                  {{ procedure.status }}
+                </span>
+              </td>
+              <td class="py-3 px-6">
+                <button (click)="deleteProcedure(procedure.id)" class="text-red-500 hover:underline dark:text-red-400">Delete</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="text-center py-4 text-gray-500 dark:text-gray-400">No procedures recorded.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

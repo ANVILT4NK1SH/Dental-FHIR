@@ -1,0 +1,48 @@
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <!-- Left Side: Subscription Management -->
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold text-gray-700 dark:text-gray-200 mb-4">Webhook Subscriptions</h1>
+    <div class="flex items-center space-x-2 mb-4">
+      <input 
+        type="url" 
+        [ngModel]="webhookUrl()"
+        (ngModelChange)="webhookUrl.set($event)"
+        placeholder="https://your-endpoint.com/webhook"
+        class="flex-grow shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+      >
+      <button (click)="addSubscription()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+        Subscribe
+      </button>
+    </div>
+    <h2 class="text-lg font-semibold text-gray-600 dark:text-gray-300 mt-6 mb-2">Active Subscriptions</h2>
+    <div class="space-y-2">
+      @for(sub of subscriptions(); track sub) {
+        <div class="p-3 bg-gray-100 rounded-md text-sm text-gray-800 font-mono dark:bg-gray-700 dark:text-gray-200">{{ sub }}</div>
+      } @empty {
+        <p class="text-gray-500 dark:text-gray-400 text-sm">No active subscriptions.</p>
+      }
+    </div>
+  </div>
+
+  <!-- Right Side: Event Log -->
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold text-gray-700 dark:text-gray-200 mb-4">Live Event Feed</h1>
+    <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
+      @for(event of events(); track event.id) {
+        <div [class]="'p-3 border-l-4 rounded-r-md ' + getEventClass(event.eventType)">
+          <div class="flex justify-between items-center">
+            <p class="font-semibold text-gray-800">{{ event.resourceType }} {{ event.eventType }}</p>
+            <span class="text-xs text-gray-500">{{ event.timestamp | date:'shortTime' }}</span>
+          </div>
+          <p class="text-sm text-gray-600 font-mono">ID: {{ event.resourceId }}</p>
+        </div>
+      } @empty {
+        <div class="text-center py-10">
+          <p class="text-gray-500 dark:text-gray-400">Waiting for events...</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Subscribe to an endpoint to begin receiving mock events.</p>
+        </div>
+      }
+    </div>
+  </div>
+</div>

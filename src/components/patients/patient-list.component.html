@@ -1,0 +1,132 @@
+
+<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+  <div class="flex justify-between items-center mb-4 gap-4 flex-wrap">
+    <h1 class="text-2xl font-bold text-gray-700 dark:text-gray-200">Patients</h1>
+    <div class="flex-grow max-w-sm">
+      <input 
+        type="text" 
+        placeholder="Search by name or identifier..."
+        [value]="searchTerm()"
+        (input)="onSearchTermChange($event.target.value)"
+        class="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+      >
+    </div>
+    <button (click)="openAddPatientModal()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+      Add Patient
+    </button>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full bg-white dark:bg-gray-800">
+      <thead class="bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+        <tr>
+          <th class="py-3 px-6 text-left">
+            <button (click)="changeSort('identifier')" class="flex items-center space-x-1 font-semibold">
+              <span>Identifier</span>
+              @if (sortColumn() === 'identifier') {
+                <span>{{ sortDirection() === 'asc' ? '▲' : '▼' }}</span>
+              }
+            </button>
+          </th>
+          <th class="py-3 px-6 text-left">
+            <button (click)="changeSort('name')" class="flex items-center space-x-1 font-semibold">
+              <span>Name</span>
+              @if (sortColumn() === 'name') {
+                <span>{{ sortDirection() === 'asc' ? '▲' : '▼' }}</span>
+              }
+            </button>
+          </th>
+          <th class="py-3 px-6 text-left">
+            <button (click)="changeSort('birthDate')" class="flex items-center space-x-1 font-semibold">
+              <span>Date of Birth</span>
+              @if (sortColumn() === 'birthDate') {
+                <span>{{ sortDirection() === 'asc' ? '▲' : '▼' }}</span>
+              }
+            </button>
+          </th>
+          <th class="py-3 px-6 text-left font-semibold">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="text-gray-700 dark:text-gray-300">
+        @for (patient of filteredAndSortedPatients(); track patient.id) {
+          <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <td class="py-3 px-6">{{ patient.identifier[0]?.value }}</td>
+            <td class="py-3 px-6">
+              <div class="flex items-center space-x-2">
+                <span>{{ patient.name[0]?.text }}</span>
+                @if (patient.note.allergies.length > 0) {
+                  <span title="This patient has allergies" class="text-red-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.21 3.03-1.742 3.03H4.42c-1.532 0-2.492-1.696-1.742-3.03l5.58-9.92zM10 13a1 1 0 110-2 1 1 0 010 2zm-1-3a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd" />
+                    </svg>
+                  </span>
+                }
+              </div>
+            </td>
+            <td class="py-3 px-6">{{ patient.birthDate }}</td>
+            <td class="py-3 px-6 space-x-4">
+              <a [routerLink]="['/patients', patient.id]" class="text-blue-500 hover:underline dark:text-blue-400">View</a>
+              <button (click)="deletePatient(patient.id)" class="text-red-500 hover:underline dark:text-red-400">Delete</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="text-center py-4 text-gray-500 dark:text-gray-400">No patients found.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Patient Modal -->
+@if (showAddPatientModal()) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300" (click)="showAddPatientModal.set(false)">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-lg" (click)="$event.stopPropagation()">
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Add New Patient</h2>
+      <form [formGroup]="patientForm" (ngSubmit)="addPatient()" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
+            <input type="text" id="name" formControlName="name" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" placeholder="John Doe">
+          </div>
+          <div>
+            <label for="identifier" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Identifier</label>
+            <input type="text" id="identifier" formControlName="identifier" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" placeholder="P004">
+          </div>
+          <div>
+            <label for="birthDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date of Birth</label>
+            <input type="date" id="birthDate" formControlName="birthDate" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+          </div>
+          <div>
+            <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone Number</label>
+            <input type="tel" id="phone" formControlName="phone" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" placeholder="555-123-4567">
+          </div>
+          <div class="md:col-span-2">
+            <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
+            <input type="email" id="email" formControlName="email" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" placeholder="name@example.com">
+          </div>
+          <div>
+            <label for="insuranceProvider" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Insurance Provider</label>
+            <input type="text" id="insuranceProvider" formControlName="insuranceProvider" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+          </div>
+           <div>
+            <label for="policyNumber" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Policy Number</label>
+            <input type="text" id="policyNumber" formControlName="policyNumber" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+          </div>
+          <div class="md:col-span-2">
+            <label for="medicalHistory" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Medical History (comma-separated)</label>
+            <textarea id="medicalHistory" formControlName="medicalHistory" rows="2" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"></textarea>
+          </div>
+          <div class="md:col-span-2">
+            <label for="allergies" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Allergies (comma-separated)</label>
+            <input type="text" id="allergies" formControlName="allergies" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" placeholder="Penicillin, Latex, etc.">
+          </div>
+        </div>
+        <div class="flex justify-end space-x-4 pt-4">
+          <button type="button" (click)="showAddPatientModal.set(false)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+          <button type="submit" [disabled]="patientForm.invalid" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg disabled:bg-blue-300">Save Patient</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

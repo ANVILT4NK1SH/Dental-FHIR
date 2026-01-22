@@ -1,0 +1,130 @@
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Calendar View -->
+  <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+    <div class="flex justify-between items-center mb-4">
+      <button (click)="changeMonth(-1)" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+      </button>
+      <h2 class="text-xl font-bold text-gray-700 dark:text-gray-200">{{ viewDate() | date:'MMMM yyyy' }}</h2>
+      <button (click)="changeMonth(1)" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+      </button>
+    </div>
+    <div class="grid grid-cols-7 gap-1 text-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+      @for(day of weekdays; track day) {
+        <div>{{ day }}</div>
+      }
+    </div>
+    <div class="grid grid-cols-7 gap-1">
+      @for(week of calendarGrid(); track week) {
+        @for(day of week; track day.date) {
+          <button (click)="selectDate(day.date)" class="relative h-20 md:h-24 p-2 border rounded-md text-left transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:border-gray-700"
+            [class.bg-gray-50]="!day.isCurrentMonth"
+            [class.dark:bg-gray-700/50]="!day.isCurrentMonth"
+            [class.text-gray-400]="!day.isCurrentMonth"
+            [class.dark:text-gray-500]="!day.isCurrentMonth"
+            [class.font-bold]="day.isCurrentMonth"
+            [class.dark:text-gray-200]="day.isCurrentMonth"
+            [class.bg-blue-500]="(selectedDate() | date:'yyyy-MM-dd') === (day.date | date:'yyyy-MM-dd')"
+            [class.dark:bg-blue-600]="(selectedDate() | date:'yyyy-MM-dd') === (day.date | date:'yyyy-MM-dd')"
+            [class.text-white]="(selectedDate() | date:'yyyy-MM-dd') === (day.date | date:'yyyy-MM-dd')"
+            [class.dark:text-white]="(selectedDate() | date:'yyyy-MM-dd') === (day.date | date:'yyyy-MM-dd')"
+            [class.ring-2]="day.isToday"
+            [class.ring-blue-600]="day.isToday"
+            [class.dark:ring-blue-400]="day.isToday"
+            [class.hover:bg-blue-100]="(selectedDate() | date:'yyyy-MM-dd') !== (day.date | date:'yyyy-MM-dd')"
+            [class.dark:hover:bg-gray-700]="(selectedDate() | date:'yyyy-MM-dd') !== (day.date | date:'yyyy-MM-dd')">
+            <span class="text-sm">{{ day.date | date:'d' }}</span>
+            @if (day.appointments.length > 0) {
+              <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full" [class.bg-white]="(selectedDate() | date:'yyyy-MM-dd') === (day.date | date:'yyyy-MM-dd')" [class.bg-blue-500]="(selectedDate() | date:'yyyy-MM-dd') !== (day.date | date:'yyyy-MM-dd')" [class.dark:bg-blue-400]="(selectedDate() | date:'yyyy-MM-dd') !== (day.date | date:'yyyy-MM-dd')"></div>
+            }
+          </button>
+        }
+      }
+    </div>
+    <div class="mt-4 flex justify-center">
+        <button (click)="goToToday()" class="text-blue-600 font-semibold py-2 px-4 rounded-lg hover:bg-blue-50 transition-colors dark:text-blue-400 dark:hover:bg-gray-700">Go to Today</button>
+    </div>
+  </div>
+
+  <!-- Appointments for Selected Date -->
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h2 class="text-xl font-bold text-gray-700 dark:text-gray-200">Schedule</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400">{{ selectedDate() | date:'fullDate' }}</p>
+      </div>
+      <button (click)="openNewAppointmentModal()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg text-sm">
+        New
+      </button>
+    </div>
+    <div class="space-y-4 max-h-[28rem] overflow-y-auto">
+      @for (appointment of appointmentsForSelectedDate(); track appointment.id) {
+        <div class="p-3 border rounded-lg hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50 flex justify-between items-center">
+          <div>
+            <p class="font-semibold text-gray-800 dark:text-gray-200">{{ appointment.participant[0].actor.display }}</p>
+            <div class="flex items-center text-sm">
+              <p class="text-gray-500 dark:text-gray-400">
+                {{ appointment.start | date:'shortTime' }} - {{ appointment.end | date:'shortTime' }}
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span [class]="'px-2 py-0.5 text-xs font-semibold rounded-full ' + getStatusClass(appointment.status)">
+              {{ appointment.status }}
+            </span>
+            <button (click)="openEditAppointmentModal(appointment)" class="p-1 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+            </button>
+            <button (click)="deleteAppointment(appointment.id)" class="p-1 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+            </button>
+          </div>
+        </div>
+      } @empty {
+        <p class="text-center text-gray-500 dark:text-gray-400 py-10">No appointments scheduled for this day.</p>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Appointment Modal -->
+@if (showAppointmentModal()) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300" (click)="showAppointmentModal.set(false)">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md" (click)="$event.stopPropagation()">
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">{{ editingAppointment() ? 'Edit' : 'New' }} Appointment</h2>
+      <form [formGroup]="appointmentForm" (ngSubmit)="saveAppointment()" class="space-y-4">
+        <div>
+          <label for="patientId" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Patient</label>
+          <select id="patientId" formControlName="patientId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <option value="" disabled>Select a patient</option>
+            @for (patient of patients(); track patient.id) {
+              <option [value]="patient.id">{{ patient.name[0].text }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label for="start" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Time</label>
+          <app-datetime-picker formControlName="start"></app-datetime-picker>
+        </div>
+        <div>
+          <label for="end" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Time</label>
+          <app-datetime-picker formControlName="end"></app-datetime-picker>
+        </div>
+        <div>
+          <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+          <select id="status" formControlName="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <option value="booked">Booked</option>
+            <option value="arrived">Arrived</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="flex justify-end space-x-4 pt-4">
+          <button type="button" (click)="showAppointmentModal.set(false)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+          <button type="submit" [disabled]="appointmentForm.invalid" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg disabled:bg-blue-300">{{ editingAppointment() ? 'Save Changes' : 'Save Appointment' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

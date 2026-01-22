@@ -1,0 +1,5 @@
+{
+  "name": "Copy of Dental FHIR AI Assistant",
+  "description": "A modern web application for managing dental patient records using FHIR standards. It features patient and appointment management, restorative procedure charting, imaging study metadata, webhook simulations, and an AI-powered charting assistant.",
+  "requestFramePermissions": []
+}

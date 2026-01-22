@@ -1,0 +1,57 @@
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <!-- Left Side: Upload Form -->
+  <div class="md:col-span-1 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold text-gray-700 dark:text-gray-200 mb-4">Upload Imaging Study</h1>
+    <form [formGroup]="imagingForm" (ngSubmit)="uploadStudy()" class="space-y-4">
+      <div>
+        <label for="patient-img" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Patient</label>
+        <select id="patient-img" formControlName="patientId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+          <option value="" disabled>Select a patient</option>
+          @for(patient of patients(); track patient.id) {
+            <option [value]="patient.id">{{ patient.name[0].text }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label for="modality" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Modality</label>
+        <input type="text" id="modality" formControlName="modality" placeholder="e.g., X-Ray, CT" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+      </div>
+       <div>
+        <label for="file-upload" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Thumbnail Image</label>
+        <div class="mt-1 flex items-center space-x-2">
+            <label class="w-full flex items-center px-4 py-2 bg-white text-blue-500 rounded-lg shadow-sm tracking-wide uppercase border border-blue-500 cursor-pointer hover:bg-blue-500 hover:text-white dark:bg-gray-700 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-500 dark:hover:text-white">
+                <svg class="w-6 h-6 mr-2" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M16.88 9.1A4 4 0 0 1 16 17H5a5 5 0 0 1-1-9.9V7a3 3 0 0 1 4.52-2.59A4.98 4.98 0 0 1 17 8c0 .38-.04.74-.12 1.1zM11 11h3l-4 4-4-4h3V9h2v2z" />
+                </svg>
+                <span class="text-sm leading-normal truncate">{{ selectedFile()?.name || 'Select a file' }}</span>
+                <input type='file' id="file-upload-input" class="hidden" (change)="onFileSelected($event)" />
+            </label>
+        </div>
+      </div>
+       <button type="submit" [disabled]="imagingForm.invalid || !selectedFile()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-blue-300">
+        Upload Study
+      </button>
+    </form>
+  </div>
+
+  <!-- Right Side: Image Gallery -->
+  <div class="md:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+    <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">All Imaging Studies</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      @for(study of studies(); track study.id) {
+        <button (click)="fullscreenImageUrl.set(study.series[0].instance[0].sopClass.code)" class="group relative text-left block w-full rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <img [src]="study.series[0].instance[0].sopClass.code" alt="{{ study.note[0].text }}" class="w-full h-32 object-cover">
+          <div class="absolute bottom-0 left-0 right-0 p-2 bg-black bg-opacity-60 text-white text-xs">
+            <p class="font-bold">{{ study.subject.display }}</p>
+            <p class="truncate">{{ study.note[0].text }}</p>
+          </div>
+        </button>
+      }
+    </div>
+  </div>
+</div>
+
+@if (fullscreenImageUrl()) {
+  <app-image-viewer [imageUrl]="fullscreenImageUrl()!" (close)="fullscreenImageUrl.set(null)"></app-image-viewer>
+}
